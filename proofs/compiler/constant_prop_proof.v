@@ -1089,8 +1089,22 @@ Proof.
 Qed.
 #[local] Hint Resolve checker_cpP : core.
 
-Lemma it_const_prop_callP fn : wiequiv_f p p' ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
+Lemma toto {E' E0' : Type → Type} {wE' : with_Error E' E0'} {rE0 : EventRels E0'} 
+         {S1 S2 T1 O1 O2 : Type}
+         [f : S1 → T1]
+         [F : T1 → CategoryKleisli.Kleisli (ITreeDefinition.itree E') S1 O1]
+         [G : CategoryKleisli.Kleisli (ITreeDefinition.itree E') S2 O2]
+         [P : rel S1 S2] [Q : rel O1 O2] :
+         wkequiv P (λ s, F (f s) s) G Q
+           → wkequiv P (λ s : S1, Monad.bind (Monad.ret (f s)) (λ v, F v s)) G Q.
 Proof.
+  move=> h ???.
+  rewrite Monad.bind_ret_l.
+  by apply h.
+Qed.
+
+Lemma it_const_prop_callP fn : wiequiv_f p p' ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
+Proof using DEind.
 Local Opaque opp_word.
   apply wequiv_fun_ind => {}fn _ fs ft [<- hfsu] fd hget.
   exists (const_prop_fun (p_globs p) fd).
@@ -1145,12 +1159,14 @@ Local Opaque opp_word.
     + have [{heq}hxs ho hes]:= is_update_immP heq.
       set Q := (cmpl_inv (const_prop_rvs None m xs).1).
       case: b hes => hes;
-      rewrite /wequiv_rec /wequiv /=;
+      rewrite /wequiv_rec /wequiv ho /=;
       (apply wkequiv_bind with Q; last by apply wkequiv_ret);
+      [ apply wkequiv_read with (R := relT); [ by apply wkequiv_ret | move=> _ _ _ ]
+      | apply toto ];
       apply wkequiv_iresult => s1 t1 s2 /st_relP [-> /= [hval hu]];
       rewrite /sem_sopn /sem_assgn; t_xrbindP => vs2_ vs1;
       move=> /(const_prop_esP hval valid_without_globals);
-      rewrite hes ho ?hxs=> -[vs' Hes' Us] Ho;
+      rewrite hes ?hxs=> -[vs' Hes' Us] Ho;
       move=> /(const_prop_rvsP hval valid_without_globals) [] hval' hw;
       have [vs2 hs u2]:= sem_pexprs_uincl hu Hes';
       have [ vs3 ho' vs_vs3 ] := vuincl_exec_opn (values_uincl_trans Us u2) Ho;
@@ -1160,9 +1176,10 @@ Local Opaque opp_word.
       move=> z z0 h ? /= ?; subst vs3 z;
       move: hw; rewrite ?h /truncate_val /= ?truncate_word_u ?wrepr_unsigned hxs /=;
       t_xrbindP => ? -> -> /=; by eexists.
-    apply wequiv_opn_uincl.
-    + by apply const_prop_esPe.
-    by apply const_prop_rvsPe.
+    apply wequiv_opn_rel_uincl with (ce := checker_cp) (de := m) => //.
+    (* FIXME: These two apply should not be needed *)
+    apply declassifyEvent_ind_recCall.
+    by apply DEind.
 
   + move=> xs o es ii m /=.
     rewrite (surjective_pairing (const_prop_rvs _ _ _)) /=.
