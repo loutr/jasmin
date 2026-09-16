@@ -53,7 +53,13 @@ Qed.
 
   Section IT.
 
-  Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+  Context
+    {E E0 : Type -> Type}
+    {wE : with_Error E E0}
+    {wD : with_Declassify E0}
+    {rE : EventRels E0}
+    {DEind : DeclassifyEvent_ind}
+  .
 
   Let Pi (i:instr) :=
     wequiv_rec p p' ev ev eq_spec (st_eq tt) [::i] (unroll_i i).1 (st_eq tt).
@@ -88,7 +94,11 @@ Qed.
     + by apply wequiv_nil.
     + by move=> > hi hc /=; surjpairing; rewrite /= -cat1s; apply wequiv_cat with (st_eq tt).
     + by move=> ????? /=; apply wequiv_assgn_rel_eq with checker_st_eq tt.
-    + by move=> ????? /=; apply wequiv_opn_rel_eq with checker_st_eq tt.
+    + move=> ????? /=; apply wequiv_opn_rel_eq with checker_st_eq tt.
+      * exact: declassifyEvent_ind_recCall.
+      * by [].
+      * by [].
+      by [].
     + by move=> ???? /=; apply wequiv_syscall_rel_eq with checker_st_eq tt.
     + by move=> ?? /=; apply wequiv_noassert.
     + by move=> > ??? /=; surjpairing; apply wequiv_if_rel_eq with checker_st_eq tt tt tt.

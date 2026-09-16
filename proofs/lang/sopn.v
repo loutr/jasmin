@@ -5,10 +5,11 @@ From mathcomp Require Import ssreflect ssrfun ssrbool seq eqtype ssralg.
 Require Export sopn_semi values.
 Require Import
   pseudo_operator
-  sem_type
   shift_kind
+  slh_ops.
+Require Import
+  sem_type
   strings
-  slh_ops
   type
   var.
 
@@ -140,6 +141,8 @@ Existing Instance _eqT.
 
 Definition asm_op_t {asm_op} {asmop : asmOp asm_op} := asm_op.
 
+Notation declassify_args := (atype + Z)%type (only parsing).
+
 Section WITH_PARAMS.
 
 Context
@@ -190,6 +193,31 @@ Lemma is_spill_opP o s tys :
   is_spill_op o = Some (s, tys) ->
   o = Opseudo_op (Ospill s tys).
 Proof. by case: o => // -[] // ?? [-> ->]. Qed.
+
+Section DECLASSIFY.
+
+Definition is_Odeclassify (o : sopn) : option declassify_args :=
+  match o with
+  | Opseudo_op (Odeclassify ty) => Some (inl ty)
+  | Opseudo_op (Odeclassify_mem len) => Some (inr len)
+  | _ => None
+  end.
+
+Let mk x :=
+  match x with
+  | inl ty => Opseudo_op (Odeclassify ty)
+  | inr n => Opseudo_op (Odeclassify_mem n)
+  end.
+
+Lemma is_OdeclassifyP op : is_reflect mk op (is_Odeclassify op).
+Proof.
+case: op => [[]||] >;
+  rewrite -?[_ (Odeclassify _)]/(mk (inl _))
+    -?[_ (Odeclassify_mem _)]/(mk (inr _));
+  by constructor.
+Qed.
+
+End DECLASSIFY.
 
 (* ------------------------------------------------------------- *)
 (* Descriptors for speudo operators                              *)
