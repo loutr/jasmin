@@ -141,6 +141,7 @@ Section PROOF.
   Qed.
 
   Local Lemma Hopn_esem_aux O ii xs t o es v vs s1 s2 vm1:
+    ~is_Odeclassify o ->
     sem_pexprs true gd s1 es = ok vs ->
     exec_sopn o vs = ok v ->
     write_lvals true gd s1 xs v = ok s2 ->
@@ -148,7 +149,7 @@ Section PROOF.
     exists2 vm2, evm s2 <=[O]  vm2 &
        esem p' ev [:: MkI ii (Copn xs t o es)] (with_vm s1 vm1) = ok (with_vm s2 vm2).
   Proof using dead_code_ok.
-    case: s1 => scs1 m1 vm1_ /= Hexpr Hopn Hw Hvm.
+    case: s1 => scs1 m1 vm1_ /= /negP odecl Hexpr Hopn Hw Hvm.
     have [ vs' Hexpr' vs_vs' ] := sem_pexprs_uincl_on' Hvm Hexpr.
     have [ v' Hopn' v_v' ] := vuincl_exec_opn vs_vs' Hopn.
     rewrite read_esE read_rvsE in Hvm.
@@ -156,7 +157,7 @@ Section PROOF.
       first by clear; SvD.fsetdec.
     exists vm2;
       first by apply: uincl_onI Hvm2; clear; SvD.fsetdec.
-    by rewrite /sem_sopn /with_vm /= -eq_globs Hexpr' /= Hopn' /= Hw'.
+    by rewrite odecl /sem_sopn /with_vm /= -eq_globs Hexpr' /= Hopn' /= Hw'.
   Qed.
 
   Local Lemma Hopn_esem ii xs t o es I c O s1 s2 vm1 :
@@ -167,7 +168,12 @@ Section PROOF.
       esem p' ev c (with_vm s1 vm1) = ok (with_vm s2 vm2).
   Proof using is_move_opP dead_code_ok.
     move=> hc; rewrite /sem_sopn; t_xrbindP => vs' vs hes ho hws.
-    move: hc hes ho hws => /=; case: ifP => _; last by move=> [<- <-]; apply Hopn_esem_aux.
+    move: hc hes ho hws => /=.
+    case: orP => [_ | H]. admit.
+    move=> [<- <-].
+    apply Hopn_esem_aux.
+    move: 
+ case: ifP => keep. ; last by move=> [<- <-]; apply Hopn_esem_aux.
     case:ifPn => [ | _] /=.
     + move=> /andP [Hdisj Hnh] [<- <-] /=.
       case: s1 s2 => scs1 m1 vm1' [scs2 m2 vm2'] _ _ hw hu.

@@ -124,11 +124,12 @@ Fixpoint dead_code_i (i:instr) (s:Sv.t) {struct i} : cexec (Sv.t * cmd) :=
 
   | Copn xs tag o es =>
     let w := vrvs xs in
-    if tag != AT_keep then
+    if (tag == AT_keep) || is_Odeclassify o then
+      ok (read_es_rec (read_rvs_rec (Sv.diff s w) xs) es, [:: i])
+    else
       if disjoint s w && negb (has lv_write_mem xs) then ok (s, [::])
       else if check_nop_opn xs o es then ok (s, [::])
       else ok (read_es_rec (read_rvs_rec (Sv.diff s w) xs) es, [:: i])
-    else   ok (read_es_rec (read_rvs_rec (Sv.diff s w) xs) es, [:: i])
 
   | Csyscall xs o es =>
     ok (read_es_rec (read_rvs_rec (Sv.diff s (vrvs xs)) xs) es, [:: i])
