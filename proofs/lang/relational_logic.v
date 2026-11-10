@@ -66,7 +66,7 @@ Qed.
 
 (* better inference than get_read8 for some reason (specific to arrays) *)
 Lemma read_get8 {n i al} {a : WArray.array n} :
-  read a al i U8 = WArray.get8 a i.
+  read a al i U8 = WArray.get8 partial a i.
 Proof. by rewrite -get_read8. Qed.
 
 Lemma read_errP n (a : WArray.array n) i :
@@ -88,7 +88,8 @@ From mathcomp Require Import eqtype word_ssrZ ssralg.
 Definition array_eq
   (n1 n2 : Z) (a1 : WArray.array n1) (a2 : WArray.array n2) : Prop :=
   [/\ n1 == n2
-    & forall i, WArray.in_bound a1 i -> WArray.get8 a1 i = WArray.get8 a2 i
+    & forall i, WArray.in_bound a1 i ->
+      WArray.get8 partial a1 i = WArray.get8 partial a2 i
   ].
 
 Lemma array_eqP n1 n2 (a1 : WArray.array n1) (a2 : WArray.array n2) :
@@ -123,7 +124,7 @@ move=> [? h] /allP def; subst n2; split=> // i hi.
 rewrite -!(read_get8 (al := Aligned)).
 suff : exists w, [elaborate read a1 Aligned i U8 ] = ok w.
 - by move=> [w /[dup] /h ->].
-apply/read_okP; by rewrite hi def // in_ziota.
+apply /is_okP. by rewrite WArray.is_ok_read8 hi def // in_ziota.
 Qed.
 
 Definition value_eq (v1 v2 : value) : Prop :=

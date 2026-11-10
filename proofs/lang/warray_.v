@@ -202,6 +202,10 @@ Module WArray.
 
     Lemma is_ok_get8 m i : is_ok (get8 partial m i) = in_bound m i && is_init m i.
     Proof. by rewrite get8_partial; case: in_bound; case: is_init. Qed.
+    
+    Lemma is_ok_read8 (a : array s) al i :
+      is_ok (read a al i U8) = in_bound a i && is_init a i.
+    Proof. by rewrite -get_read8 /= is_ok_get8. Qed.
 
     Definition in_range (i:pointer) (ws:wsize) :=
       ((0 <=? i) && (i + wsize_size ws <=? s))%Z.
