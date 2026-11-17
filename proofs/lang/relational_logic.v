@@ -641,8 +641,8 @@ Class DeclassifyEvent_ind {E0} { rE0 : EventRels E0 } { wD : with_Declassify E0 
         EPreRel0_ (wD _ (Edeclassify v1)) (wD _ (Edeclassify v2));
 
     DEind_pre_mem :
-      forall b1 b2,
-        EPreRel0_ (wD _ (Edeclassify_mem b1)) (wD _ (Edeclassify_mem b2));
+      forall b,
+        EPreRel0_ (wD _ (Edeclassify_mem b)) (wD _ (Edeclassify_mem b));
   }.
  
 Context
