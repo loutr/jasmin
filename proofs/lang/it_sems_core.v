@@ -99,7 +99,7 @@ Definition trigger_opn
   (s : estate) (d : declassify_args) (es : pexprs) : itree E unit :=
   vs <- iresult (sem_pexprs (wdb := true) (p_globs p) s es);;
   e <- iresult (event_of_opn d (emem s) vs);;
-  trigger (e : DeclassifyEvent _).
+  trigger_declassify e.
 
 Definition fexec_syscall (o : syscall_t) (fs:fstate) : exec fstate :=
   Let: (scs, m, vs) := exec_syscall fs.(fscs) fs.(fmem) o fs.(fvals) in

@@ -513,7 +513,7 @@ Definition preInvDeclassify (e : DeclassifyEvent unit) : Prop :=
   preInv (fromDeclassify e).
 
 Lemma preInvDeclassifyP :
-  khoare (wE := wE) preInvDeclassify (fun e => trigger e) PredT.
+  khoare (wE := wE) preInvDeclassify (fun e => trigger_declassify e) PredT.
 Proof. move=> e h; exact: (lutt_trigger h). Qed.
 
 Lemma trigger_opnP {Rve P Qerr d es} :

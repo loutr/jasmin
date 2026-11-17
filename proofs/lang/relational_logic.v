@@ -657,7 +657,8 @@ Definition preRelDeclassify (e1 e2 : DeclassifyEvent unit) : Prop :=
   EPreRel (fromDeclassify e1) (fromDeclassify e2).
 
 Lemma wkequiv_preRelDeclassify :
-  wkequiv preRelDeclassify (fun e => trigger e) (fun e => trigger e) relT.
+  wkequiv preRelDeclassify
+    (fun e => trigger_declassify e) (fun e => trigger_declassify e) relT.
 Proof. move=> ?? h; exact: (xrutt_trigger _ _ h). Qed.
 
 (* FIXME: is this OK or should it be propagated down to the following 4 proofs? *)

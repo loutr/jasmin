@@ -165,12 +165,8 @@ Proof using eq_globs DEind.
   by move=> ????; apply wequiv_call_rel_eq with checker_st_eq tt => //; apply hinit.
 Qed.
 
-(* No problem here but... *)
-Check wequiv_st_eq.
 End FUN.
 
-(* ... causes OOM here *)
-(* Check wequiv_st_eq. *)
 Section ESEM.
 
 Let Pi i :=
