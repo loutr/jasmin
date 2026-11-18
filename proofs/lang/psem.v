@@ -138,7 +138,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE0}
 .
 
 Let Pi i := wequiv p p' ev ev' (st_eq tt) [::i] [::i] (st_eq tt).
@@ -232,7 +232,7 @@ Context
   {wE: with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Lemma wequiv_rec_st_eq c : wequiv_rec p p' ev ev' eq_spec (st_eq tt) c c (st_eq tt).
 Proof using eq_globs DEind.
@@ -253,7 +253,7 @@ Context
   {wE: with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Lemma st_eq_finalize fd fd' :
   f_tyout fd = f_tyout fd' ->
@@ -443,7 +443,7 @@ Context
   {wE: with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Let Pi i :=
   forall X, Sv.Subset (read_I i) X ->
@@ -509,7 +509,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Lemma it_read_cP_rec X c :
   Sv.Subset (read_c c) X ->
@@ -532,7 +532,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Lemma it_read_cP X c :
   Sv.Subset (read_c c) X ->
@@ -624,7 +624,7 @@ Context
   {wE: with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Local Notation gd := (p_globs p).
 Local Notation gd' := (p_globs p').
@@ -676,7 +676,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}.
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Definition uincl_spec : EquivSpec :=
   {| rpreF_ := fun (fn1 fn2 : funname) (fs1 fs2 : fstate) => fn1 = fn2 /\ fs_uincl fs1 fs2
@@ -769,7 +769,7 @@ Context
   {wE: with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE0}
 .
 
 Lemma it_sem_uincl_rec c :
@@ -823,7 +823,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE0}
 .
 
 Let Pi i :=
@@ -888,7 +888,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE0}
 .
 
 Lemma it_eq_cmdP_rec c c' :
@@ -913,7 +913,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE12 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE12}
   {rE_trans : EventRels_trans rE12 rE12 rE12}
   {p1 : prog (pT := pT1)} {p2 : prog (pT := pT)}
   {ev1 : extra_val_t (progT := pT1)} {ev2 : extra_val_t (progT := pT)}

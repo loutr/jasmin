@@ -632,8 +632,7 @@ Definition EqRels {E0} : EventRels E0 :=
   |}.
 
 Section DECLASSIFY.
-(* FIXME: how to keep E0 explicit for readability? *)  
-Class DeclassifyEvent_ind {E0} { rE0 : EventRels E0 } { wD : with_Declassify E0 } :=
+Class DeclassifyEvent_ind {E0} { wD : with_Declassify E0 } (rE0 : EventRels E0) :=
   {
     DEind_pre_val :
       forall v1 v2,
@@ -650,7 +649,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE0}
 .
 
 Definition preRelDeclassify (e1 e2 : DeclassifyEvent unit) : Prop :=
@@ -744,8 +743,8 @@ Instance relEvent_recCall {rE0 : EventRels E0} : EventRels (recCall +' E0) :=
 Instance declassifyEvent_ind_recCall
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
-  {DEind : DeclassifyEvent_ind} :
-  DeclassifyEvent_ind (rE0 := relEvent_recCall).
+  {DEind : DeclassifyEvent_ind rE0} :
+  DeclassifyEvent_ind relEvent_recCall.
 Proof using.
 constructor; rewrite /EPostRel0_ /= /resum;
   [exact: DEind_pre_val|exact: DEind_pre_mem].
@@ -2082,7 +2081,7 @@ End REL.
 Section ST_REL.
 
 Context
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE0}
   {D:Type}
   (R : D -> vm1_t -> vm2_t -> Prop)
   {ce : Checker_e (st_rel R)}.

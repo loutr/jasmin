@@ -261,7 +261,7 @@ Section PROOF.
     {wE : with_Error E E0}
     {wD : with_Declassify E0}
     {rE : EventRels E0}
-    {DEind : DeclassifyEvent_ind}
+    {DEind : DeclassifyEvent_ind rE}
   .
 
   #[local] Lemma checker_st_uincl_onP : Checker_uincl p p' checker_st_uincl_on.
@@ -426,7 +426,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
+  {DEind : DeclassifyEvent_ind rE}
 .
 
 Lemma it_dead_code_tokeep_callPu (p p': uprog) apply_ret_annot do_nop onfun fn ev:

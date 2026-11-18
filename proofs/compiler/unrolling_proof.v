@@ -58,7 +58,7 @@ Qed.
     {wE : with_Error E E0}
     {wD : with_Declassify E0}
     {rE : EventRels E0}
-    {DEind : DeclassifyEvent_ind}
+    {DEind : DeclassifyEvent_ind rE0}
   .
 
   Let Pi (i:instr) :=

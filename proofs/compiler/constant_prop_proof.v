@@ -948,8 +948,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE : EventRels E0}
-  {DEind : DeclassifyEvent_ind}
-.
+  {DEind : DeclassifyEvent_ind rE}.
 
 Variable (p:prog) (ev:extra_val_t).
 Notation gd := (p_globs p).
