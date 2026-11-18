@@ -518,7 +518,6 @@ Lemma wkequiv_iter (IT1 IT2 T1 T2 : Type) (I : rel IT1 IT2) (Q : rel T1 T2) body
   wkequiv I (ITree.iter body1) (ITree.iter body2) Q.
 Proof. by move=> hbody i1 i2 hI; apply xrutt_iter with I. Qed.
 
-(* TODO: it will be nicer to be able to rewrite under wkequiv, i.e we need morphisms *)
 Lemma wkequiv_eutt_l {I1 I2 O1 O2}
   (P : rel I1 I2)
   (Q : rel O1 O2) F1 F2 F1':
@@ -537,6 +536,37 @@ Lemma wkequiv_eutt_r {I1 I2 O1 O2}
   wkequiv P F1 F2' Q.
 Proof.
   by move=> heq h s1 s2 hP; rewrite <-(heq _ _ hP); apply h.
+Qed.
+
+(* Morphisms, so that [setoid_rewrite] can apply the monad laws (and any other
+   [eutt] equation) directly under a [wkequiv] goal, under the lambda binding
+   the input state. Without these one has to go through [wkequiv_eutt_l] /
+   [wkequiv_eutt_r], which leave the rewritten side as an evar and so block
+   [rewrite].
+
+   The signature has to mention every remaining argument of [wkequiv P]
+   (both kleisli arrows *and* the postcondition) and land in [flip impl]:
+   that is the shape [setoid_rewrite] looks for when rewriting in a goal.
+   A two-argument version with [Q] fixed and [iff] as the conclusion type
+   checks, but never matches. *)
+#[export] Instance wkequiv_Proper {I1 I2 O1 O2} (P : rel I1 I2) :
+  Proper (pointwise_relation I1 (eutt eq) ==>
+          pointwise_relation I2 (eutt eq) ==>
+          eq ==> Basics.flip Basics.impl)
+         (@wkequiv I1 I2 O1 O2 P).
+Proof.
+  move=> F1 F1' h1 F2 F2' h2 Q Q' <- h i1 i2 hP.
+  by rewrite (h1 i1) (h2 i2); apply h.
+Qed.
+
+#[export] Instance wkequiv_io_Proper {I1 I2 O1 O2} (P : rel I1 I2) :
+  Proper (pointwise_relation I1 (eutt eq) ==>
+          pointwise_relation I2 (eutt eq) ==>
+          eq ==> Basics.flip Basics.impl)
+         (@wkequiv_io I1 I2 O1 O2 P).
+Proof.
+  move=> F1 F1' h1 F2 F2' h2 Q Q' <- h i1 i2 hP.
+  by rewrite (h1 i1) (h2 i2); apply h.
 Qed.
 
 End WKEQUIV.

@@ -1088,20 +1088,6 @@ Proof.
 Qed.
 #[local] Hint Resolve checker_cpP : core.
 
-Lemma toto {E' E0' : Type → Type} {wE' : with_Error E' E0'} {rE0 : EventRels E0'} 
-         {S1 S2 T1 O1 O2 : Type}
-         [f : S1 → T1]
-         [F : T1 → CategoryKleisli.Kleisli (ITreeDefinition.itree E') S1 O1]
-         [G : CategoryKleisli.Kleisli (ITreeDefinition.itree E') S2 O2]
-         [P : rel S1 S2] [Q : rel O1 O2] :
-         wkequiv P (λ s, F (f s) s) G Q
-           → wkequiv P (λ s : S1, Monad.bind (Monad.ret (f s)) (λ v, F v s)) G Q.
-Proof.
-  move=> h ???.
-  rewrite Monad.bind_ret_l.
-  by apply h.
-Qed.
-
 Lemma it_const_prop_callP fn : wiequiv_f p p' ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
 Proof using DEind.
 Local Opaque opp_word.
@@ -1161,7 +1147,7 @@ Local Opaque opp_word.
       rewrite /wequiv_rec /wequiv ho /=;
       (apply wkequiv_bind with Q; last by apply wkequiv_ret);
       [ apply wkequiv_read with (R := relT); [ by apply wkequiv_ret | move=> _ _ _ ]
-      | apply toto ];
+      | setoid_rewrite Eqit.bind_ret_l ];
       apply wkequiv_iresult => s1 t1 s2 /st_relP [-> /= [hval hu]];
       rewrite /sem_sopn /sem_assgn; t_xrbindP => vs2_ vs1;
       move=> /(const_prop_esP hval valid_without_globals);
