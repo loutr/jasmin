@@ -734,7 +734,7 @@ Definition RPostD {T1 T2} (d1 : recCall T1) (t1: T1) (d2 : recCall T2) (t2: T2) 
     end
   end t1 t2.
 
-Instance relEvent_recCall {rE0 : EventRels E0} : EventRels (recCall +' E0) :=
+Instance relEvent_recCall (rE0 : EventRels E0) : EventRels (recCall +' E0) :=
   {| EPreRel0_  := sum_prerelF (@RPreD) EPreRel0
    ; EPostRel0_ := sum_postrelF (@RPostD) EPostRel0
   |}.
@@ -744,7 +744,7 @@ Instance declassifyEvent_ind_recCall
   {wD : with_Declassify E0}
   {rE0 : EventRels E0}
   {DEind : DeclassifyEvent_ind rE0} :
-  DeclassifyEvent_ind relEvent_recCall.
+  DeclassifyEvent_ind (relEvent_recCall rE0).
 Proof using.
 constructor; rewrite /EPostRel0_ /= /resum;
   [exact: DEind_pre_val|exact: DEind_pre_mem].
@@ -2407,7 +2407,7 @@ Context
   (spec : EquivSpec).
 
 Definition wequiv_f_rec RPreF ii1 ii2 fn1 fn2 RPostF :=
-  wequiv_f_ii (rE0:=relEvent_recCall spec) p1 p2 ev1 ev2 RPreF ii1 ii2 fn1 fn2 RPostF.
+  wequiv_f_ii (rE0:=relEvent_recCall spec rE0) p1 p2 ev1 ev2 RPreF ii1 ii2 fn1 fn2 RPostF.
 
 Section REC'.
 
@@ -2427,8 +2427,8 @@ Definition wequiv_fun_body_hyp_rec' (RPreF:relPreF) fn1 fn2 (RPostF:relPostF) :=
       exists (P Q : rel_c) (tbody epilogue : cmd),
         [/\ P s11 s21
           , fd2.(f_body) = tbody ++ epilogue
-          , wequiv (sem_F1 := sem_F1 fn1) (sem_F2 := sem_F2 fn2) (rE0:=relEvent_recCall spec) p1 p2 ev1 ev2 P fd1.(f_body) tbody Q
-          , ∀ s₀, wequiv (sem_F1 := sem_F1 fn1) (sem_F2 := sem_F2 fn2) (rE0:=relEvent_recCall spec) p1 p2 ev1 ev2 (λ s t, s = s₀ ∧ Q s t ∧ ∃ fs, finalize_funcall (dc := dc1) fd1 s = ok fs) [::] epilogue (λ s t, s = s₀ ∧ Q s t)
+          , wequiv (sem_F1 := sem_F1 fn1) (sem_F2 := sem_F2 fn2) (rE0:=relEvent_recCall spec rE0) p1 p2 ev1 ev2 P fd1.(f_body) tbody Q
+          , ∀ s₀, wequiv (sem_F1 := sem_F1 fn1) (sem_F2 := sem_F2 fn2) (rE0:=relEvent_recCall spec rE0) p1 p2 ev1 ev2 (λ s t, s = s₀ ∧ Q s t ∧ ∃ fs, finalize_funcall (dc := dc1) fd1 s = ok fs) [::] epilogue (λ s t, s = s₀ ∧ Q s t)
           , wrequiv Q (finalize_funcall (dc:=dc1) fd1) (finalize_funcall (dc:=dc2) fd2) (RPostF fn1 fn2 fs1 fs2)
           & forall fr1 fr2, RPostF fn1 fn2 fs1 fs2 fr1 fr2 ->
                sem_post (wsw:=wsw1) (wa:=wa1) (dc:=dc1) (pT:=pT1) p1 fn1 fs1.(fvals) fr1 = ok () ->
@@ -2437,7 +2437,7 @@ Definition wequiv_fun_body_hyp_rec' (RPreF:relPreF) fn1 fn2 (RPostF:relPostF) :=
 #[local]
 Lemma xrutt_weaken_aux post (sem1 : itree (recCall +' E) fstate) (sem2 : itree (recCall +' E) fstate) :
   xrutt (errcutoff (is_error (FIso_suml recCall (Err:=ErrEvent)))) nocutoff
-    (EPreRel (rE0 := relEvent_recCall spec)) (EPostRel (rE0 := relEvent_recCall spec))
+    (EPreRel (rE0 := relEvent_recCall spec rE0)) (EPostRel (rE0 := relEvent_recCall spec rE0))
    post sem1 sem2 ->
   xrutt (@EE_MR _ (@errcutoff _ (is_error wE)) recCall) (@EE_MR _ nocutoff recCall)
       (sum_prerel (@RPreD spec) EPreRel) (sum_postrel (@RPostD spec) EPostRel)
@@ -2500,7 +2500,7 @@ Definition wequiv_fun_body_hyp_rec_wa (RPreF:relPreF) fn1 fn2 (RPostF:relPostF) 
         initialize_funcall (dc:=dc2) p2 ev2 fd2 fs2 = ok s21 &
         exists (P Q : rel_c),
           [/\ P s11 s21
-            , wequiv (sem_F1 := sem_F1 fn1) (sem_F2 := sem_F2 fn2) (rE0:=relEvent_recCall spec) p1 p2 ev1 ev2 P fd1.(f_body) fd2.(f_body) Q
+            , wequiv (sem_F1 := sem_F1 fn1) (sem_F2 := sem_F2 fn2) (rE0:=relEvent_recCall spec rE0) p1 p2 ev1 ev2 P fd1.(f_body) fd2.(f_body) Q
             , wrequiv Q (finalize_funcall (dc:=dc1) fd1) (finalize_funcall (dc:=dc2) fd2) (RPostF fn1 fn2 fs1 fs2)
             & (forall fr1 fr2, RPostF fn1 fn2 fs1 fs2 fr1 fr2 ->
                sem_post (wsw:=wsw1) (wa:=wa1) (dc:=dc1) (pT:=pT1) p1 fn1 fs1.(fvals) fr1 = ok () ->
@@ -2532,7 +2532,7 @@ Qed.
 End REC.
 
 Definition wequiv_rec P c1 c2 Q :=
-  wequiv (rE0:=relEvent_recCall spec) p1 p2 ev1 ev2 P c1 c2 Q.
+  wequiv (rE0:=relEvent_recCall spec rE0) p1 p2 ev1 ev2 P c1 c2 Q.
 
 Definition wequiv_rec_i P i1 i2 Q := wequiv_rec P [:: i1 ] [:: i2 ] Q.
 
@@ -2707,7 +2707,7 @@ Definition wequiv_fun_body_hyp_rec (RPreF:relPreF) fn1 fn2 (RPostF:relPostF) :=
         initialize_funcall (dc:=dc2) p2 ev2 fd2 fs2 = ok s21 &
         exists (P Q : rel_c),
         [/\ P s11 s21
-          , wequiv (sem_F1:=sem_F1 fn1) (sem_F2:=sem_F2 fn2) (rE0:= relEvent_recCall spec)
+          , wequiv (sem_F1:=sem_F1 fn1) (sem_F2:=sem_F2 fn2) (rE0:= relEvent_recCall spec rE0)
             p1 p2 ev1 ev2
             P
             (f_body fd1)
