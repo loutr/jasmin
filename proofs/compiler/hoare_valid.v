@@ -34,6 +34,7 @@ Context
   {sip : SemInstrParams asm_op syscall_state}
   {E E0: Type -> Type}
   {wE: with_Error E E0}
+  {wD: with_Declassify E0}
   {iEr : InvErr}
   {iE0 : InvEvent E0}
   {pT : progT}
@@ -132,6 +133,7 @@ Context
   {sip : SemInstrParams asm_op syscall_state}
   {E E0: Type -> Type}
   {wE: with_Error E E0}
+  {wD: with_Declassify E0}
 .
 
 Context
@@ -185,6 +187,11 @@ apply: (cmd_rect (Pr:=Pi_r) (Pi:=Pi) (Pc:=Pc)) => {c} //; subst Pc Pi.
 - move=> xs tg o es ii; apply/hoare_ioP => s _.
   apply: (hoare_opn _ (Qerr := rInvErr s) (Rve := PredT) (Rvo := PredT)) => //.
   - exact: rhoare_true.
+  - case: is_OdeclassifyP => [d vs _|//] ? ->.
+    case: event_of_opn => // decl.
+    (* TODO declassify: Maybe this should be moved in a separate lemma.
+       To reconsider once more passes are patched. *)
+    by rewrite /preInvDeclassify/preInv subevent_withErrorP.
   - move=> ??; exact: rhoare_true.
   move=> v _ _ ->; case h: write_lvals => [?|//].
   exact: write_lvals_mem_equiv h.
@@ -297,6 +304,7 @@ Context
   {sip : SemInstrParams asm_op syscall_state}
   {E E0: Type -> Type}
   {wE: with_Error E E0}
+  {wD: with_Declassify E0}
 .
 
 #[local] Existing Instance trivial_invErr.
