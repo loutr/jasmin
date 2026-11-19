@@ -1143,39 +1143,23 @@ Local Opaque opp_word.
     case heq : is_update_imm => [[[x b] e] | ].
     + have [{heq}hxs ho hes]:= is_update_immP heq.
       set Q := (cmpl_inv (const_prop_rvs None m xs).1).
-      case: b hes => hes.
-      - rewrite /wequiv_rec /wequiv ho /=.
-        apply wkequiv_bind with Q; last by apply wkequiv_ret.
-        apply wkequiv_read with (R := relT); first by apply wkequiv_ret.
-        move=> _ _ _.
-        apply wkequiv_iresult => s1 t1 s2 /st_relP [-> /= [hval hu]].
-        rewrite /sem_sopn /sem_assgn; t_xrbindP => vs2_ vs1.
-        move=> /(const_prop_esP hval valid_without_globals).
-        rewrite hes=> -[vs' Hes' Us] Ho.
-        move=> /(const_prop_rvsP hval valid_without_globals) [] hval' hw.
-        have [vs2 hs u2]:= sem_pexprs_uincl hu Hes'.
-        have [ vs3 ho' vs_vs3 ] := vuincl_exec_opn (values_uincl_trans Us u2) Ho.
-        have [vm2 {}hw U]:= writes_uincl hu vs_vs3 hw.
-        move: hs => /=; t_xrbindP => _ ze he <- ?; subst vs2 => /=.
-        move: ho'; rewrite he /exec_sopn /= /se_move_sem; t_xrbindP.
-        move=> z z0 h ? /= ?; subst vs3 z.
-        move: hw; rewrite h /truncate_val /= hxs /=.
-        t_xrbindP => ? -> -> /=; by eexists.
-      rewrite /wequiv_rec /wequiv ho /=.
-      apply wkequiv_bind with Q; last by apply wkequiv_ret.
-      setoid_rewrite Eqit.bind_ret_l.
-      apply wkequiv_iresult => s1 t1 s2 /st_relP [-> /= [hval hu]].
-      rewrite /sem_sopn /sem_assgn; t_xrbindP => vs2_ vs1.
-      move=> /(const_prop_esP hval valid_without_globals).
-      rewrite hes=> -[vs' Hes' Us] Ho.
-      move=> /(const_prop_rvsP hval valid_without_globals) [] hval' hw.
-      have [vs2 hs u2]:= sem_pexprs_uincl hu Hes'.
-      have [ vs3 ho' vs_vs3 ] := vuincl_exec_opn (values_uincl_trans Us u2) Ho.
-      have [vm2 {}hw U]:= writes_uincl hu vs_vs3 hw.
-      move: hs => /=; t_xrbindP => _ ze he <- ?; subst vs2 => /=.
-      move: ho'; rewrite he /exec_sopn /= /se_move_sem; t_xrbindP.
-      move=> z z0 h ? /= ?; subst vs3 z.
-      move: hw; rewrite h /truncate_val /= truncate_word_u wrepr_unsigned hxs /=.
+      case: b hes => hes;
+      rewrite /wequiv_rec /wequiv ho /=;
+      (apply wkequiv_bind with Q; last by apply wkequiv_ret);
+      [ apply wkequiv_read with (R := relT); [ by apply wkequiv_ret | move=> _ _ _ ]
+      | setoid_rewrite Eqit.bind_ret_l ];
+      apply wkequiv_iresult => s1 t1 s2 /st_relP [-> /= [hval hu]];
+      rewrite /sem_sopn /sem_assgn; t_xrbindP => vs2_ vs1;
+      move=> /(const_prop_esP hval valid_without_globals);
+      rewrite hes ?hxs=> -[vs' Hes' Us] Ho;
+      move=> /(const_prop_rvsP hval valid_without_globals) [] hval' hw;
+      have [vs2 hs u2]:= sem_pexprs_uincl hu Hes';
+      have [ vs3 ho' vs_vs3 ] := vuincl_exec_opn (values_uincl_trans Us u2) Ho;
+      have [vm2 {}hw U]:= writes_uincl hu vs_vs3 hw;
+      move: hs => /=; t_xrbindP => _ ze he <- ?; subst vs2 => /=;
+      move: ho'; rewrite ?he /exec_sopn /= /se_move_sem; t_xrbindP;
+      move=> z z0 h ? /= ?; subst vs3 z;
+      move: hw; rewrite ?h /truncate_val /= ?truncate_word_u ?wrepr_unsigned hxs /=;
       t_xrbindP => ? -> -> /=; by eexists.
     apply wequiv_opn_rel_uincl with (ce := checker_cp) (de := m) => //.
     (* FIXME: These two apply should not be needed *)
