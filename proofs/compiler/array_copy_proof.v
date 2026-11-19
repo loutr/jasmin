@@ -339,7 +339,12 @@ End FUNCTION.
 
 Section IT.
 
-Context {E E0 : Type -> Type} {wE: with_Error E E0} {rE0 : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE0 : EventRels E0}
+  {DEind : DeclassifyEvent_ind rE0}.
 
 Let Pi (i1 : instr) :=
   forall fi X, not_tmp fi X -> Sv.Subset (vars_I i1) X ->
@@ -361,7 +366,7 @@ Lemma eq_extra : p_extra p1 = p_extra p2.
 Proof using Hp. by move: Hp;rewrite /array_copy_prog; t_xrbindP => ?? <-. Qed.
 
 Lemma it_array_copy_fdP fn : wiequiv_f p1 p2 ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
-Proof using Hp.
+Proof using Hp DEind.
   apply wequiv_fun_ind => {}fn _ fs ft [<- hfsu] fd1 hget.
   have [fd2 hcopy ->] := all_checked hget; exists fd2 => //.
   move=> s1 hinit.
@@ -413,14 +418,15 @@ Proof using Hp.
   + move=> xs tg o es ii fi X; rewrite vars_I_opn /vars_lvals /= => freshX hsub i2.
     case heq: is_copy => [ [ws n] | ]; last first.
     + move=> [<-].
-      apply wequiv_opn_rel_uincl with checker_st_uincl_on X => //.
+      apply wequiv_opn_rel_uincl with checker_st_uincl_on X => //; first exact _.
       + by split => //; clear -hsub; SvD.fsetdec.
       by split => //; clear -hsub; SvD.fsetdec.
     t_xrbindP => -[sx sc] hgets /=.
     t_xrbindP => -[tx tc] hgett.
     t_xrbindP => htx <-.
-    apply wequiv_opn_esem => s t s' /st_relP [-> /= hu].
-    rewrite /sem_sopn (is_copyP heq); t_xrbindP => vs' vs hes hcopy hxs.
+    rewrite (is_copyP heq).
+    apply wequiv_opn_esem => // s t s' /st_relP [-> /= hu].
+    rewrite /sem_sopn; t_xrbindP => vs' vs hes hcopy hxs.
     have [vm2 ??]:= esem_array_copy freshX hsub hgets hgett htx hu hes hcopy hxs.
     by exists (with_vm s' vm2).
   + move=> ???? fi X; rewrite vars_I_syscall /vars_lvals /= => freshX hsub _ [<-].
