@@ -11,18 +11,8 @@ Module E.
 
 Definition pass_name := "allocation"%string.
 
-(* FIXME: are there internal errors? *)
-Definition gen_error (internal:bool) (ii:option instr_info) (msg:string) := 
-  {| pel_msg      := pp_s msg
-   ; pel_fn       := None
-   ; pel_fi       := None
-   ; pel_ii       := ii
-   ; pel_vi       := None
-   ; pel_pass     := Some pass_name
-   ; pel_internal := internal
-  |}.
-
-Definition error msg := gen_error true None msg.
+Definition error_pp (pp: pp_error) := pp_internal_error pass_name pp.
+Definition error (msg:string) := error_pp (pp_s msg).
 
 Definition loop_iterator := loop_iterator pass_name.
 
@@ -407,10 +397,8 @@ End M.
 Section WSW.
 Context {wsw : WithSubWord}.
 
-Definition alloc_error := pp_internal_error_s "allocation".
-
 Definition cerr_varalloc xi1 xi2 s:=
-  pp_internal_error "Variable allocation" (pp_box [:: pp_var xi1; pp_s "and"; pp_var xi2; pp_s ":"; pp_s s]).
+  E.error_pp (pp_box [:: pp_var xi1; pp_s "and"; pp_var xi2; pp_s ":"; pp_s s]).
 
 Definition check_v xi1 xi2 (m:M.t) : cexec M.t :=
   let x1 := xi1.(v_var) in
@@ -425,7 +413,7 @@ Definition check_v xi1 xi2 (m:M.t) : cexec M.t :=
     end
   else Error (cerr_varalloc xi1 xi2 "type mismatch").
 
-Definition error_e := pp_internal_error_s "allocation" "expression are not equal".
+Definition error_e := pp_internal_error_s "allocation" "expressions should be equal".
 
 Definition check_gv x1 x2 (m:M.t) : cexec M.t :=
   Let _ := assert (x1.(gs) == x2.(gs)) error_e in
@@ -457,7 +445,7 @@ Fixpoint check_e (e1 e2:pexpr) (m:M.t) : cexec M.t :=
     Let _ := assert (o1 == o2) error_e in check_e e11 e21 m >>= check_e e12 e22
   | PappN o1 es1, PappN o2 es2 =>
     Let _ := assert (o1 == o2) error_e in
-    fold2 (alloc_error "check_e (appN)") check_e es1 es2 m
+    fold2 (E.error "check_e (appN)") check_e es1 es2 m
   | Pif t e e1 e2, Pif t' e' e1' e2' =>
     Let _ := assert (convertible t t') error_e in
     check_e e e' m >>= check_e e1 e1' >>= check_e e2 e2'
@@ -479,7 +467,7 @@ Definition is_Pvar (e:option (atype * pexpr)) :=
   | _ => None
   end.
 
-Definition error_lv := pp_internal_error_s "allocation" "lval not equal".
+Definition error_lv := pp_internal_error_s "allocation" "lvals should be equal".
 
 Definition check_lval (e2:option (atype * pexpr)) (x1 x2:lval) m : cexec M.t :=
   match x1, x2 with
@@ -570,19 +558,19 @@ Context (dead_vars : instr_info -> Sv.t).
 Fixpoint check_i (i1 i2:instr_r) r :=
     match i1, i2 with
     | Cassgn x1 _ ty1 e1, Cassgn x2 _ ty2 e2 =>
-      Let _ := assert (convertible ty1 ty2) (alloc_error "bad type in assignment") in
+      Let _ := assert (convertible ty1 ty2) (E.error "bad type in assignment") in
       check_e e1 e2 r >>= check_lval (Some (ty2,e2)) x1 x2
 
     | Copn xs1 _ o1 es1, Copn xs2 _ o2 es2 =>
-      Let _ := assert (o1 == o2) (alloc_error "operators not equals") in
+      Let _ := assert (o1 == o2) (E.error "operators should be equal") in
       check_es es1 es2 r >>= check_lvals xs1 xs2
 
     | Csyscall xs1 o1 es1, Csyscall xs2 o2 es2 =>
-      Let _ := assert (o1 == o2) (alloc_error "syscall not equals") in
+      Let _ := assert (o1 == o2) (E.error "syscalls should be equal") in
       check_es es1 es2 r >>= check_lvals xs1 xs2
 
     | Ccall x1 f1 arg1, Ccall x2 f2 arg2 =>
-      Let _ := assert (f1 == f2) (alloc_error "functions not equals") in
+      Let _ := assert (f1 == f2) (E.error "functions should be equal") in
       check_es arg1 arg2 r >>= check_lvals x1 x2
 
     | Cif e1 c11 c12, Cif e2 c21 c22 =>
@@ -592,7 +580,7 @@ Fixpoint check_i (i1 i2:instr_r) r :=
       ok (M.merge r1 r2)
 
     | Cfor x1 (d1,lo1,hi1) c1, Cfor x2 (d2,lo2,hi2) c2 =>
-      Let _ := assert (d1 == d2) (alloc_error "loop directions not equals") in
+      Let _ := assert (d1 == d2) (E.error "loop directions should be equal") in
       Let rhi := check_e lo1 lo2 r >>=check_e hi1 hi2 in
       let check_c r :=
         check_var x1 x2 r >>=
@@ -608,7 +596,7 @@ Fixpoint check_i (i1 i2:instr_r) r :=
       Let r := loop2 check_c loop_counter r in
       ok r
 
-    | _, _ => Error (alloc_error "instructions not equals")
+    | _, _ => Error (E.error "instructions should be equal")
     end
 
 with check_I i1 i2 r :=
@@ -635,7 +623,7 @@ Definition check_fundef (ep1 ep2 : extra_prog_t) (f1 f2: funname * fundef) (_:Da
   let (fn2,fd2) := f2 in
   add_funname fn1 (add_finfo fd1.(f_info) (
     Let _ := assert [&& fn1 == fn2, all2 convertible fd1.(f_tyin) fd2.(f_tyin) & all2 convertible fd1.(f_tyout) fd2.(f_tyout) ]
-                        (E.error "functions not equal") in
+                        (E.error "functions should be equal") in
     Let r := init_alloc fd1.(f_extra) ep1 ep2 in
     Let r := check_f_extra r fd1.(f_extra) fd2.(f_extra) fd1.(f_params) fd2.(f_params) in
     Let r := check_cmd (dead_vars_fd f2) fd1.(f_body) fd2.(f_body) r in
@@ -644,7 +632,7 @@ Definition check_fundef (ep1 ep2 : extra_prog_t) (f1 f2: funname * fundef) (_:Da
     Let _r := check_es es1 es2 r in
     ok tt)).
 
-Definition check_prog_error := alloc_error "check_fundef (fold2)".
+Definition check_prog_error := E.error "check_fundef (fold2)".
 
 Definition check_prog ep1 p_funcs1 ep2 p_funcs2 := 
   fold2 check_prog_error (check_fundef ep1 ep2) p_funcs1 p_funcs2 tt.
@@ -660,7 +648,7 @@ Definition init_alloc_uprog (_: extra_fun_t) (_ _: extra_prog_t) : cexec M.t :=
   ok M.empty.
 
 Definition check_f_extra_u (r: M.t) (e1 e2: extra_fun_t) p1 p2 :=
-  Let _ := assert (e1 == e2) (E.error "extra not equal") in
+  Let _ := assert (e1 == e2) (E.error "extras should be equal") in
   check_vars p1 p2 r.
 
 Definition check_ufundef := check_fundef init_alloc_uprog check_f_extra_u.
@@ -690,7 +678,7 @@ Definition check_f_extra_s (r: M.t) (e1 e2: extra_fun_t) p1 p2 : cexec M.t :=
   (e1.(sf_max_call_depth) == e2.(sf_max_call_depth)),
   (is_RAnone e1.(sf_return_address) == is_RAnone e2.(sf_return_address)) &
   (e1.(sf_align_args) == e2.(sf_align_args))]
-      (E.error "extra not equal") in
+      (E.error "extras should be equal") in
   check_vars p1 p2 r.
 
 Definition check_sfundef := check_fundef init_alloc_sprog check_f_extra_s.
