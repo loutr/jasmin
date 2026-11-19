@@ -63,12 +63,6 @@ Class FIso (E1 E2: Type -> Type) : Type := FI {
     mid21 : forall T (x : E1 T), mfun2 (mfun1 x) = x ;
 }.
 
-(* NB: a [#[global] Hint Mode FIso ! - : typeclass_instances.] here would stop
-   [FIsoId] from guessing [?A := ?B] and [FIso_suml] from growing both indices,
-   but it breaks statements that rely on that guessing -- [interp_throw] in
-   it_sems_core.v leaves its error type flexible. Bounding the search depth
-   above is what keeps those loops from exhausting memory. *)
-
 Notation with_Error E E0 := (FIso E (ErrEvent +' E0)).
 
 #[global] Instance fromErr E E0 {wE : with_Error E E0} : ErrEvent -< E :=
