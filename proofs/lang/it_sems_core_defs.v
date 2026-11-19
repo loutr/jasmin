@@ -13,39 +13,6 @@ Require Import utils it_exec values.
 Import MonadNotation.
 Local Open Scope monad_scope.
 
-(* ITree's sum instances ([ReSum_inl], [ReSum_inr], [ReSum_sum]) can only
-   satisfy a goal whose target event type is an unresolved evar by growing it,
-   so instance search diverges; unbounded, it exhausts memory instead of
-   failing. Upstream asks every client file to set this bound:
-
-     "Automatic application of commutativity and associativity for sums types
-      constructed with [sum1]. N.B. This is prone to infinite instance
-      resolution loops. Put the following option at the top of your [.v] files
-      to bound the instance search depth: [Typeclasses eauto := 5.] Higher
-      numbers allow bigger instances but grow the search space exponentially."
-
-   ITree 5.2.1, theories/Core/Subevent.v, lines 14-27:
-   https://github.com/DeepSpec/InteractionTrees/blob/5.2.1/theories/Core/Subevent.v#L14-L27
-
-   [Set Typeclasses Depth] is the modern spelling of [Typeclasses eauto :=].
-
-   Two things were learnt the hard way about where and how tight to set it.
-
-   It must NOT go in utils.v. A project-wide bound starves MathComp's
-   algebra-structure inference: depth 5 broke the ring-reflection proof at
-   memory_model.v:736 ("erefl has type true = true while it is expected to
-   have type false = true"), and depth 10 merely moved the failure to
-   memory_example.v:783. Setting it here instead leaves those files alone,
-   since they are upstream of this one.
-
-   And ITree's suggested 5 is too tight for us. Rewriting under [eutt]/[rutt]
-   needs deep [Proper]/[respectful]/[pointwise_relation] chains, so depth 5
-   made generalized rewriting fail with "setoid rewrite failed: UNDEFINED
-   EVARS" at core_logics.v:105. 10 is enough for that while still small
-   enough to contain the subevent search. Raise it further if a legitimate
-   resolution fails -- the error names the goal that ran out of room. *)
-#[export] Set Typeclasses Depth 10.
-
 (**** Error semantics ******************************************)
 Section Errors.
 
