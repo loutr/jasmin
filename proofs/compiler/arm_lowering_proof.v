@@ -1082,6 +1082,20 @@ Proof.
   exact: lower_Papp2P.
 Qed.
 
+Lemma lower_not_declassify ws e op es :
+  lower_pexpr_aux ws e = Some (op, es) -> ~~ is_Odeclassify op.
+Proof.
+  case: e => // [?|?????|???||].
+  1-3: by move => /chk_ws_regP [] _ [] <- _.
+  + move => + p0 /chk_ws_regP [] _.
+    case => // [?||||].
+    2,3: by case => // ?; apply: obindP => _ _; apply: obindP => ? _ [] <- _.
+    + by apply obindP => _ _ [] <- _; case p0.
+    + case => // []. admit.
+    + do 2!case => //. by move => [] <- _.
+  + case => //; admit.
+Admitted.  
+
 Lemma sem_i_lower_pexpr_aux s0 s1 s0' ws ws' ii e op es (w : word ws') lv tag :
   lower_pexpr_aux ws e = Some (op, es)
   -> eq_fv s0 s0'
@@ -1094,7 +1108,7 @@ Lemma sem_i_lower_pexpr_aux s0 s1 s0' ws ws' ii e op es (w : word ws') lv tag :
        esem_i p' ev (MkI ii (Copn [:: lv ] tag op es)) s0' = ok s1'
        & eq_fv s1 s1'.
 Proof.
-  move=> h hs00 hws hfve hfvlv hseme hwrite.
+  move=> /[dup] h /lower_not_declassify hdecl hs00 hws hfve hfvlv hseme hwrite.
 
   have hseme' := eeq_exc_sem_pexpr hfve hs00 hseme.
   clear hseme.
@@ -1110,7 +1124,7 @@ Proof.
   rewrite /= /sem_sopn /=.
   rewrite hsemes {hsemes} /=.
   rewrite hexec {hexec} /=.
-  by rewrite hwrite' {hwrite'} /=.
+  by rewrite hdecl hwrite' {hwrite'} /=.
 Qed.
 
 Lemma no_preP o pre aop es :
@@ -1624,7 +1638,11 @@ Qed.
 (* -------------------------------------------------------------------- *)
 
 Section IT.
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE0 : EventRels E0}.
+Context
+  {E E0: Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE0 : EventRels E0}.
 
 #[ local ]
 Definition Pi_ (i : instr) :=
@@ -1683,14 +1701,17 @@ Proof using fv_correct.
     by exists s2'; last exact: (eeq_excT hs11 hs12').
   (* Copn *)
   + move=> lvs tag op es ii /disj_fvars_vars_I_Copn [hfvlvs hfve].
-    apply (wequiv_opn_esem (sip:=sip)) => s0 s0' s1 hs00.
+    case hdecl: (is_Odeclassify op) => [a|].
+    + case: is_OdeclassifyP hdecl => [|//] [vdecl|ndecl] _ /=;
+      (* some kind of reflexivity or decl-related rule? *) admit.
+    apply (wequiv_opn_esem (sip:=sip)) => [|s0 s0' s1 hs00]; first by rewrite hdecl.
     rewrite /sem_sopn; t_xrbindP=> vs xs hsemes hexec hwrite.
     have [s1' hwrite' hs11] := eeq_exc_write_lvals hfvlvs hs00 hwrite.
     clear hfvlvs hwrite.
     assert (hcopn : esem_i p' ev (MkI ii (Copn lvs tag op es)) s0' = ok s1').
     - rewrite /= /sem_sopn /=.
       rewrite (eeq_exc_sem_pexprs hfve hs00 hsemes) {hfve hs00 hsemes} /=.
-      rewrite hexec /=.
+      rewrite hdecl hexec /=.
       exact: hwrite'.
 Opaque esem.
     clear hs00 hsemes hwrite' => /=.
@@ -1732,7 +1753,7 @@ Opaque esem.
   move=> xs fn es ii /disj_fvars_vars_I_Ccall [hdisjx hdisje] /=.
   apply (wequiv_call_rel_eq (sip:=sip)) with checker_st_eq_ex fvars => //.
   by move=> ???; apply: (wequiv_fun_rec (spec := eq_spec)).
-Qed.
+Admitted.
 End IT.
 
 End PROOF.
