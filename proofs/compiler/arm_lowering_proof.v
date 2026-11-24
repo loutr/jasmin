@@ -476,11 +476,13 @@ Qed.
 (* TODO_ARM: This is an invariant of [lower_pexpr_aux] needed for the [Pif] case
    in the proof of [lower_pexpr].
    Is there a better way of keeping track of it? *)
+(* This invariant also allows to observe that lowered expressions
+   are not declassify operators, at no additional cost. *)
 #[ local ]
 Definition inv_lower_pexpr_aux
   (ws : wsize) (op : sopn) (es : seq pexpr) : Prop :=
   [/\ disj_fvars (read_es es)
-    , match op with
+    , ~~ is_Odeclassify op && match op with
       | Oasm (BaseOp (None, ARM_op _ opts)) =>
           ~~ set_flags opts && ~~ is_conditional opts
       | _ => true
@@ -1082,20 +1084,6 @@ Proof.
   exact: lower_Papp2P.
 Qed.
 
-Lemma lower_not_declassify ws e op es :
-  lower_pexpr_aux ws e = Some (op, es) -> ~~ is_Odeclassify op.
-Proof.
-  case: e => // [?|?????|???||].
-  1-3: by move => /chk_ws_regP [] _ [] <- _.
-  + move => + p0 /chk_ws_regP [] _.
-    case => // [?||||].
-    2,3: by case => // ?; apply: obindP => _ _; apply: obindP => ? _ [] <- _.
-    + by apply obindP => _ _ [] <- _; case p0.
-    + case => // []. admit.
-    + do 2!case => //. by move => [] <- _.
-  + case => //; admit.
-Admitted.  
-
 Lemma sem_i_lower_pexpr_aux s0 s1 s0' ws ws' ii e op es (w : word ws') lv tag :
   lower_pexpr_aux ws e = Some (op, es)
   -> eq_fv s0 s0'
@@ -1108,12 +1096,12 @@ Lemma sem_i_lower_pexpr_aux s0 s1 s0' ws ws' ii e op es (w : word ws') lv tag :
        esem_i p' ev (MkI ii (Copn [:: lv ] tag op es)) s0' = ok s1'
        & eq_fv s1 s1'.
 Proof.
-  move=> /[dup] h /lower_not_declassify hdecl hs00 hws hfve hfvlv hseme hwrite.
+  move=> h hs00 hws hfve hfvlv hseme hwrite.
 
   have hseme' := eeq_exc_sem_pexpr hfve hs00 hseme.
   clear hseme.
 
-  have [[vs hsemes hexec] _] := lower_pexpr_auxP h hws hfve hseme'.
+  have [[vs hsemes hexec] [_ /andP [hdecl _]]] := lower_pexpr_auxP h hws hfve hseme'.
   clear h hws hfve hseme'.
 
   have [s1' hwrite' hs11] := eeq_exc_write_lval hfvlv hs00 hwrite.
@@ -1642,7 +1630,8 @@ Context
   {E E0: Type -> Type}
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
-  {rE0 : EventRels E0}.
+  {rE0 : EventRels E0}
+  {DEind : DeclassifyEvent_ind rE0}.
 
 #[ local ]
 Definition Pi_ (i : instr) :=
@@ -1661,15 +1650,20 @@ Lemma checker_st_eq_exP_ : Checker_eq p p' checker_st_eq_ex.
 Proof. apply checker_st_eq_exP => //. Qed.
 #[local] Hint Resolve checker_st_eq_exP_ : core.
 
+#[ local ]
+Lemma lower_copn_declneg lvs lvs' es es' op op' :
+  lower_copn lvs op es = Some (lvs', op', es') ->
+    ~~is_Odeclassify op.
+Proof. by case: op => [] []. Qed.
+
 Lemma it_lower_callP fn :
-  wiequiv_f p p' ev ev (rpreF (eS:= eq_spec)) fn fn (rpostF (eS:=eq_spec)).
-Proof using fv_correct.
+  wiequiv_f p p' ev ev pre_eq fn fn post_eq.
+Proof using fv_correct DEind.
   apply wequiv_fun_ind => {}fn _ fs _ [<- <-] fd hget.
   have [_ hfvres hfvc] := disj_fvars_get_fundef hget.
   rewrite get_map_prog hget /= /lower_fd.
   eexists; first reflexivity.
-  move=> s.
-  move=> /(eq_initialize (fd':= with_body fd (lower_cmd (f_body fd)))) -/(_ p' erefl erefl erefl erefl) hinit.
+  move=> s /(eq_initialize (fd':= with_body fd (lower_cmd (f_body fd)))) -/(_ p' erefl erefl erefl erefl) hinit.
   exists s => //; exists eq_fv, eq_fv; split => //=; last by apply st_eq_ex_finalize.
   move: (f_body fd) hfvc. clear fn fs fd hget hfvres hinit s.
   set sip := sip_of_asm_e.
@@ -1701,9 +1695,12 @@ Proof using fv_correct.
     by exists s2'; last exact: (eeq_excT hs11 hs12').
   (* Copn *)
   + move=> lvs tag op es ii /disj_fvars_vars_I_Copn [hfvlvs hfve].
-    case hdecl: (is_Odeclassify op) => [a|].
-    + case: is_OdeclassifyP hdecl => [|//] [vdecl|ndecl] _ /=;
-      (* some kind of reflexivity or decl-related rule? *) admit.
+    rewrite /lower_i.
+    case h: lower_copn => [[[lvs' op'] es']|]; last first.
+    (* FIXME: The [unshelve] prefix is not used anywhere, so maybe this can
+       be written differently. *)
+    + by unshelve eapply wequiv_opn_rel_eq => //; first exact: _. 
+    have hdecl := lower_copn_declneg h.
     apply (wequiv_opn_esem (sip:=sip)) => [|s0 s0' s1 hs00]; first by rewrite hdecl.
     rewrite /sem_sopn; t_xrbindP=> vs xs hsemes hexec hwrite.
     have [s1' hwrite' hs11] := eeq_exc_write_lvals hfvlvs hs00 hwrite.
@@ -1715,9 +1712,6 @@ Proof using fv_correct.
       exact: hwrite'.
 Opaque esem.
     clear hs00 hsemes hwrite' => /=.
-    case h: lower_copn => [[[lvs' op'] es']|]; last first.
-    + exists s1'; last exact: hs11.
-      by rewrite esem1.
     have [vm hsem1 heq]:= lower_copnP hfve hcopn h.
     exists (with_vm s1' vm); first by rewrite esem1.
     case: hs11=> ?? hvm; split => //=.
@@ -1753,7 +1747,7 @@ Opaque esem.
   move=> xs fn es ii /disj_fvars_vars_I_Ccall [hdisjx hdisje] /=.
   apply (wequiv_call_rel_eq (sip:=sip)) with checker_st_eq_ex fvars => //.
   by move=> ???; apply: (wequiv_fun_rec (spec := eq_spec)).
-Admitted.
+Qed.
 End IT.
 
 End PROOF.
