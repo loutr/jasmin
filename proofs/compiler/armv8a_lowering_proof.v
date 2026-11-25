@@ -493,6 +493,7 @@ Qed.
 Definition inv_lower_pexpr_aux
   (ws : wsize) (op : sopn) (es : seq pexpr) : Prop :=
   [/\ disj_fvars (read_es es)
+    , ~~ is_Odeclassify op
     & sopn_tout op = [:: aword ws ]
   ].
 
@@ -1151,7 +1152,7 @@ Proof.
         move: hop; rewrite /sem_sop2_typed /mk_sem_op /= => -[?]; subst w2;
         move: hw => /Vword_inj [?]; subst ws'; move=> /= ?; subst w;
         (split;
-          last (split; [ exact: (disj_fvars_read_es2 hfve0 hfve1) | by [] ]));
+          last (split; [ exact: (disj_fvars_read_es2 hfve0 hfve1) | done | by [] ]));
         (exists [:: Vword w0; Vword w1];
           first by rewrite /sem_pexprs /= hseme0 hseme1 /=);
         move: (hwsx); rewrite orbC => hval;
@@ -1183,7 +1184,7 @@ Proof.
         move: hop => /sem_sop2_divP [hdiv0 hdiv1 ?]; subst w2;
         move: hw => /Vword_inj [?]; subst ws'; move=> /= ?; subst w;
         (split;
-          last (split; [ exact: (disj_fvars_read_es2 hfve0 hfve1) | by [] ]));
+          last (split; [ exact: (disj_fvars_read_es2 hfve0 hfve1) | done | by [] ]));
         (exists [:: Vword w0; Vword w1];
           first by rewrite /sem_pexprs /= hseme0 hseme1 /=);
         move: (hwsx); rewrite orbC => hval;
@@ -1222,6 +1223,7 @@ Proof.
           last (split;
             [ apply: (disj_fvars_read_es2 hfve0);
               exact: (disjoint_w hsub hfve1)
+            | done
             | by [] ]));
         (exists [:: v0; v1'];
           first by rewrite /sem_pexprs /= hseme0 hsem1' /=);
@@ -1246,7 +1248,7 @@ Proof.
             move: hseme1; rewrite /= /sem_sop1 /= => -[?]; subst v1;
             move: hx1; rewrite /= truncate_word_u => -[?]; subst x1
           ];
-        (split; last (split; [ exact: hfve0 | by [] ]));
+        (split; last (split; [ exact: hfve0 | done | by [] ]));
         (exists [:: v0 ]; first by rewrite /sem_pexprs /= hseme0 /=);
         move: (hwsx); rewrite orbC => hval;
         rewrite /exec_sopn /= hval /= hx0 /=;
@@ -1266,7 +1268,7 @@ Proof.
         move: hw => /Vword_inj [?]; subst ws'; move=> /= ?; subst w;
         (split;
           last (split;
-            [ exact: (disj_fvars_read_es2 hfve0 hfve1) | by [] ]));
+            [ exact: (disj_fvars_read_es2 hfve0 hfve1) | done | by [] ]));
         (exists [:: v0; v1 ];
           first by rewrite /sem_pexprs /= hseme0 hseme1 /=);
         move: (hwsx); rewrite orbC => hval;
@@ -1286,7 +1288,7 @@ Proof.
         move: hw => /Vword_inj [?]; subst ws'; move=> /= ?; subst w;
         assert (hwc := is_wconstP true (p_globs p) s hconst);
         move: hwc; rewrite hseme1 /= hx1 => -[?]; subst c;
-        (split; last (split; [ exact: hfve0 | by [] ]));
+        (split; last (split; [ exact: hfve0 | done | by [] ]));
         (eexists; first by rewrite /sem_pexprs /= hseme0 /=);
         move: (hwsx); rewrite orbC => hval;
         rewrite /exec_sopn /= hval /= hx0 /=;
@@ -1333,7 +1335,7 @@ Proof.
             [ first
                 [ exact: (disj_fvars_read_es2_app2 hfve1 hfve0)
                 | exact: (disj_fvars_read_es2_app2 hfve0 hfve1) ]
-            | by [] ]));
+            | done | by [] ]));
         (eexists;
           first by rewrite /sem_pexprs /= hsemx hsemy ?hseme0 ?hseme1 /=);
         move: (hwsx); rewrite orbC => hval;
@@ -1389,7 +1391,7 @@ Proof.
             [ first
                 [ exact: (disj_fvars_read_es2_app2 (op := Omul (Op_w U64)) hfve1 hfve0)
                 | exact: (disj_fvars_read_es2_app2 (op := Omul (Op_w U64)) hfve0 hfve1) ]
-            | by [] ]));
+            | done | by [] ]));
         (eexists;
           first by rewrite /sem_pexprs /= hsemx hsemy ?hseme0 ?hseme1 /=);
         rewrite /exec_sopn /= hwx hwy (to_word_m haddend hws) /=;
@@ -1409,7 +1411,7 @@ Proof.
         move: hx0 hx1; rewrite /= !truncate_word_u => -[?] [?]; subst x0 x1;
         move: hop; rewrite /sem_sop2_typed /mk_sem_op /= => -[?]; subst w2;
         move: hw => /Vword_inj [?]; subst ws'; move=> /= ?; subst w;
-        (split; last (split; [ exact: (disj_fvars_read_es2 hfve0 hfve1) | by [] ]));
+        (split; last (split; [ exact: (disj_fvars_read_es2 hfve0 hfve1) | done | by [] ]));
         (eexists; first by rewrite /sem_pexprs /= hsemx hsemy /=);
         rewrite /exec_sopn /= hwx hwy /=;
         by rewrite /armv8a_UMULL_semi /armv8a_SMULL_semi zero_extend_u ].
@@ -1480,7 +1482,7 @@ Proof.
     + rewrite /= ok_v0' hbase hsham /=.
       eexists; first by reflexivity.
       by apply (with_shift_binop (opts := opts_at ws) hshift_binop hallowed hcmp1 erefl hbase hsham hw1'' hsopn).
-    split.
+    split => //.
     + apply disj_fvars_read_es3 => //.
       by apply: disjoint_w hfv; clear; rewrite !read_es_cons /=; SvD.fsetdec.
     by move: htout; rewrite /sopn_tout /= (sopn_tout_with_shift mn' (opts_at ws) sh).
@@ -1535,7 +1537,7 @@ Proof.
   all: move: hwc;
     rewrite hseme1 /= (truncate_word_le _ (cmp_le_trans hws hws1)) => -[?];
     subst c.
-  all: split; last (split; [ exact: hfve0 | by [] ]).
+  all: split; last (split; [ exact: hfve0 | done | by [] ]).
   all: eexists;
     first by rewrite /sem_pexprs /= hseme0 /= /sem_sop1 /=.
   all: rewrite /exec_sopn /=.
@@ -1577,7 +1579,7 @@ Proof.
   have hseme' := eeq_exc_sem_pexpr hfve hs00 hseme.
   clear hseme.
 
-  have [[vs hsemes hexec] _] := lower_pexpr_auxP h hws hfve hseme'.
+  have [[vs hsemes hexec] [_ hdecl _]] := lower_pexpr_auxP h hws hfve hseme'.
   clear h hws hfve hseme'.
 
   have [s1' hwrite' hs11] := eeq_exc_write_lval hfvlv hs00 hwrite.
@@ -1588,7 +1590,7 @@ Proof.
   rewrite /= /sem_sopn /=.
   rewrite hsemes {hsemes} /=.
   rewrite hexec {hexec} /=.
-  by rewrite hwrite' {hwrite'} /=.
+  by rewrite hdecl hwrite' {hwrite'} /=.
 Qed.
 
 Lemma no_preP o pre aop es :
@@ -2112,7 +2114,12 @@ Qed.
 (* -------------------------------------------------------------------- *)
 
 Section IT.
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE0 : EventRels E0}.
+Context
+  {E E0: Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE0 : EventRels E0}
+  {DEind : DeclassifyEvent_ind rE0}.
 
 #[ local ]
 Definition Pi_ (i : instr) :=
@@ -2131,9 +2138,15 @@ Lemma checker_st_eq_exP_ : Checker_eq p p' checker_st_eq_ex.
 Proof. apply checker_st_eq_exP => //. Qed.
 #[local] Hint Resolve checker_st_eq_exP_ : core.
 
+#[ local ]
+Lemma lower_copn_declneg lvs lvs' es es' op op' :
+  lower_copn lvs op es = Some (lvs', op', es') ->
+    ~~is_Odeclassify op.
+Proof. by case: op => [] []. Qed.
+
 Lemma it_lower_callP fn :
   wiequiv_f p p' ev ev (rpreF (eS:= eq_spec)) fn fn (rpostF (eS:=eq_spec)).
-Proof using E E0 atoI dc ev fv fv_correct p pT rE0 sCP sc_sem syscall_state wE warning wsw.
+Proof using fv_correct DEind.
   apply wequiv_fun_ind => {}fn _ fs _ [<- <-] fd hget.
   have [_ hfvres hfvc] := disj_fvars_get_fundef hget.
   rewrite get_map_prog hget /= /lower_fd.
@@ -2171,20 +2184,23 @@ Proof using E E0 atoI dc ev fv fv_correct p pT rE0 sCP sc_sem syscall_state wE w
     by exists s2'; last exact: (eeq_excT hs11 hs12').
   (* Copn *)
   + move=> lvs tag op es ii /disj_fvars_vars_I_Copn [hfvlvs hfve].
-    apply (wequiv_opn_esem (sip:=sip)) => s0 s0' s1 hs00.
+    rewrite /lower_i.
+    case h: lower_copn => [[[lvs' op'] es']|]; last first.
+    (* FIXME: The [unshelve] prefix is not used anywhere, so maybe this can
+       be written differently. *)
+    + by unshelve eapply wequiv_opn_rel_eq => //; first exact: _. 
+    have hdecl := lower_copn_declneg h.
+    apply (wequiv_opn_esem (sip:=sip)) => [|s0 s0' s1 hs00]; first by rewrite hdecl.
     rewrite /sem_sopn; t_xrbindP=> vs xs hsemes hexec hwrite.
     have [s1' hwrite' hs11] := eeq_exc_write_lvals hfvlvs hs00 hwrite.
     clear hfvlvs hwrite.
     assert (hcopn : esem_i p' ev (MkI ii (Copn lvs tag op es)) s0' = ok s1').
     - rewrite /= /sem_sopn /=.
       rewrite (eeq_exc_sem_pexprs hfve hs00 hsemes) {hfve hs00 hsemes} /=.
-      rewrite hexec /=.
+      rewrite hdecl hexec /=.
       exact: hwrite'.
 Opaque esem.
     clear hs00 hsemes hwrite' => /=.
-    case h: lower_copn => [[[lvs' op'] es']|]; last first.
-    + exists s1'; last exact: hs11.
-      by rewrite esem1.
     have [vm hsem1 heq]:= lower_copnP hfve hcopn h.
     exists (with_vm s1' vm); first by rewrite esem1.
     case: hs11=> ?? hvm; split => //=.
