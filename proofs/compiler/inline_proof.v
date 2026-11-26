@@ -212,7 +212,12 @@ Qed.
 
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0: Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  {DEind : DeclassifyEvent_ind rE}.
 
 Section FD.
 
@@ -238,7 +243,7 @@ Definition do_inline caller iinfo (callee:funname) :=
   (caller == fn) && ii_is_inline iinfo.
 
 Notation wequiv_rec :=
- (wequiv (rE0:=relEvent_recCall uincl_spec)
+ (wequiv (rE0:=relEvent_recCall uincl_spec rE)
     (sem_F1 := sem_fun_inline do_inline fn) (sem_F2 := sem_fun_rec E) ).
 
 Let Pi i :=
@@ -255,7 +260,7 @@ Proof. by apply checker_st_uincl_onP. Qed.
 
 Lemma it_inline_fd_aux fn' :
   wiequiv_f p1 p2 ev ev (rpreF (eS:=uincl_spec)) fn' fn' (rpostF (eS:=uincl_spec)).
-Proof using uniq_funname inline_fd_ok.
+Proof using uniq_funname inline_fd_ok DEind.
   move=> fs1 fs2 hpre.
   rewrite (isem_call_inline p1 ev do_inline).
   move: fs1 fs2 hpre.
@@ -282,7 +287,8 @@ Proof using uniq_funname inline_fd_ok.
                          (sem_fun (sem_Fun := sem_fun_rec E) p1 ev ii fn fs).
     + move=> ii fn2 fs /=; rewrite /do_inline; case: eqP => //= ?; reflexivity.
     rewrite (isem_cmd_ext h) => {h}.
-    by move: s t; apply it_sem_uincl_aux => // ?????; apply: wequiv_fun_rec.
+    move: s t; apply it_sem_uincl_aux => // [|?????]; last by apply: wequiv_fun_rec.
+    by apply declassifyEvent_ind_recCall.
   (* Second it works for fn1 *)
   move=> ? [? ->]; subst fn1 fd1; exists fd' => //.
   have : exists2 Xc,
@@ -315,8 +321,8 @@ Proof using uniq_funname inline_fd_ok.
     + by rewrite !read_writeE; clear; SvD.fsetdec.
     by rewrite /read_rvs !read_writeE /= read_rvE; clear; SvD.fsetdec.
   + move=> xs tg o es ii X1 X2 _ [? <-].
-    by apply wequiv_opn_rel_uincl with checker_st_uincl_on X1 => //=; subst X1; split => //;
-      rewrite !read_writeE; clear; SvD.fsetdec.
+    apply wequiv_opn_rel_uincl with checker_st_uincl_on X1 => //=;
+    first (exact _); subst X1; split => //; rewrite !read_writeE; clear; SvD.fsetdec.
   + move=> xs o es ii X1 X2 _ [? <-].
     by apply wequiv_syscall_rel_uincl with checker_st_uincl_on X1 => //=; subst X1; split => //;
       rewrite !read_writeE; clear; SvD.fsetdec.
@@ -464,7 +470,7 @@ Lemma inline_fd_consP (pfuncs1 pfuncs0 pfuncs2 pfuncs: ufun_decls) :
   uniq [seq x.1 | x <- p_funcs p2] /\
   ((forall fn, wiequiv_f p p1 ev ev (rpreF (eS:=uincl_spec)) fn fn (rpostF (eS:=uincl_spec))) ->
    (forall fn, wiequiv_f p p2 ev ev (rpreF (eS:=uincl_spec)) fn fn (rpostF (eS:=uincl_spec)))).
-Proof using rE_trans.
+Proof using rE_trans DEind.
   elim: pfuncs1 pfuncs0 pfuncs2 pfuncs => /= [ | [fn1 fd1] pfuncs1 hrec] pfuncs0 pfuncs2 pfuncs.
   + by move=> [->].
   rewrite {1}/inline_fd_cons; t_xrbindP.
@@ -486,11 +492,12 @@ Qed.
 Lemma it_inline_call_errP p' fn :
   inline_prog_err extend_iinfo p = ok p' ->
   wiequiv_f p p' ev ev (rpreF (eS:=uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
-Proof using rE_trans.
+Proof using rE_trans DEind.
   rewrite /inline_prog_err; case: ifP => //; t_xrbindP => huniq pfuncs h <-.
   have /(_ [::]) /= := inline_fd_consP h.
   rewrite cats0 => /(_ huniq) [_ ]; apply => fn'; rewrite (surj_prog p).
   apply it_sem_uincl_f.
+  exact: _.
 Qed.
 
 End IT.
