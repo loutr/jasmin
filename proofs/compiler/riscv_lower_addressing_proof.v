@@ -201,7 +201,13 @@ Qed.
 
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE0 : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE0 : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE0} *).
 
 #[ local ]
 Lemma checker_st_eq_onP_ : Checker_eq p p' checker_st_eq_on.

@@ -189,7 +189,14 @@ Qed.
 
 Section IT_SEM.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  {DEind : DeclassifyEvent_ind rE}.
+
 
 Lemma wdb_ok_eq_true wdb1 wdb2: wdb_ok wdb1 wdb2 -> wdb1 /\ wdb2.
 Proof. by case => -[-> ->]. Qed.
@@ -219,7 +226,7 @@ Lemma it_psem_call :
 
   forall fn,
     wiequiv_f (wsw1:=nosubword) (wsw2:=withsubword) p p ev ev (rpreF (eS:= eq_spec)) fn fn (rpostF (eS:=eq_spec)).
-Proof.
+Proof using DEind.
   move=> hsyscall hinitstate hfinal fn.
   apply wequiv_fun_ind => {}fn _ fs _ [<- <-] fd ->; exists fd => // s1 hinit.
   have : exists2 s2 : estate_s, initialize_funcall p ev fd fs = ok s2 & estate_sim s1 s2.
@@ -241,8 +248,8 @@ Proof.
   apply (cmd_rect (Pr := Pr_) (Pi:=Pi_) (Pc:=Pc_)) => // {fd}.
   + by apply wequiv_nil.
   + by move=> i c; apply wequiv_cons.
-  + by move=> >;apply wequiv_assgn_rel_eq with checker_st_eq tt.
-  + by move=> >; apply wequiv_opn_rel_eq with checker_st_eq tt.
+  + by move=> >;apply wequiv_assgn_rel_eq_R with checker_st_eq tt.
+  + move=> ?????; apply wequiv_opn_rel_eq with checker_st_eq tt => //; exact _.
   + move=> ????; apply wequiv_syscall_rel_eq_core with checker_st_eq tt => //.
     move=> [???] [???] ? [<- <- <-]; rewrite /fexec_syscall /=.
     by t_xrbindP => -[[??]?] /= /hsyscall -> [<-] /=; eauto.
@@ -266,11 +273,16 @@ Context
   {spp : SemPexprParams}
   {sip : SemInstrParams asm_op syscall_state}.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  {DEind : DeclassifyEvent_ind rE}.
 
 Lemma it_psem_call_u (p:uprog) ev fn :
   wiequiv_f (wsw1:=nosubword) (wsw2:=withsubword) p p ev ev (rpreF (eS:= eq_spec)) fn fn (rpostF (eS:=eq_spec)).
-Proof.
+Proof using DEind.
   apply (it_psem_call (sCP := fun wsw => sCP_unit (wsw := wsw))) => //=.
   move=> _ ??? [<-]; eexists; eauto.
   by split => //= x; rewrite !Vm.initP.
@@ -278,7 +290,7 @@ Qed.
 
 Lemma it_psem_call_s (p:sprog) ev fn :
   wiequiv_f (wsw1:=nosubword) (wsw2:=withsubword) p p ev ev (rpreF (eS:= eq_spec)) fn fn (rpostF (eS:=eq_spec)).
-Proof.
+Proof using DEind.
   apply (it_psem_call (sCP := fun wsw => sCP_stack (wsw := wsw))) => //=.
   clear.
   move=> fd scs mem s.

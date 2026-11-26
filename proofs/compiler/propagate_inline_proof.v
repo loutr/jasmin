@@ -539,7 +539,13 @@ Section PROOF.
 
   Section IT.
 
-  Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+  Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
   Definition st_pi pi s1 s2 :=
     st_uincl tt s1 s2 /\ valid_pi gd s1 pi.

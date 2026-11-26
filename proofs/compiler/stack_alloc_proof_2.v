@@ -3529,7 +3529,13 @@ End SEM.
 
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
 Definition sa_pre fn1 fn2 fs1 fs2 :=
   [/\ fn1 = fn2
@@ -4245,7 +4251,13 @@ Qed.
 *)
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
 Theorem it_alloc_progP nrip nrsp data oracle_g oracle (P: uprog) (SP: sprog) fn :
   alloc_prog shparams saparams is_move_op fresh_var_ident pp_sr nrip nrsp data oracle_g oracle P = ok SP ->

@@ -137,7 +137,13 @@ End BODY.
 
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE0 : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE0 : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE0} *).
 
 Lemma checker_st_eq_onP_ : Checker_eq p p' checker_st_eq_on.
 Proof using Hp. by apply checker_st_eq_onP; rewrite eq_globs. Qed.
@@ -225,7 +231,13 @@ End DOIT.
 
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE0 : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE0 : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE0} *).
 
 Lemma it_load_constants_progP p p' doit:
   load_constants_prog fresh_reg doit p = ok p' →

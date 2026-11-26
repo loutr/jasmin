@@ -21,7 +21,13 @@ Section REMOVE_ASSERT.
   Lemma eq_p_extra : p_extra p' = p_extra p.
   Proof using remove_assert_ok. by rewrite -remove_assert_ok. Qed.
 
-  Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+  Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
   #[local] Notation st_eq := (st_rel (λ _ : unit, eq) tt).
 

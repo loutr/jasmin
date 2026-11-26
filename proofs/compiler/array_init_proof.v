@@ -24,7 +24,13 @@ Context {pT: progT} {sCP: semCallParams}.
 
 Section IT_REMOVE_INIT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
 Context (is_reg_array: var -> bool) (p : prog) (ev: extra_val_t).
 Notation gd := (p_globs p).
@@ -102,7 +108,13 @@ End IT_REMOVE_INIT.
 End Section.
 
 Section IT.
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
 (* TODO : do we really need the instances ? *)
 Lemma it_remove_init_fdPu is_reg_array (p : uprog) ev fn :
@@ -120,7 +132,13 @@ Definition undef_except (X:Sv.t) vm :=
 
 Section IT_ADD_INIT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
 Context (p : uprog) (ev:unit).
 

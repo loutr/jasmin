@@ -198,7 +198,13 @@ Section PROOF.
 
   Section IT.
 
-  Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+  Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
   Definition dc_spec :=
    {|
@@ -281,7 +287,13 @@ Qed.
 
 Section IT.
 
-Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
 Lemma it_dead_calls_errP (s : Sf.t) (p p': prog) :
   dead_calls_err s p = ok p' →

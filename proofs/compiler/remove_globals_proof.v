@@ -93,7 +93,13 @@ Module INCL. Section INCL.
 
   Section IT.
 
-  Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+  Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
   Notation st_equal := (st_rel (fun _ : unit => eq)).
 
@@ -728,7 +734,13 @@ Module RGP. Section PROOFS.
 
   Section IT.
 
-  Context {E E0: Type -> Type} {wE : with_Error E E0} {rE : EventRels E0}.
+  Context
+  {E E0 : Type -> Type}
+  {wE : with_Error E E0}
+  {wD : with_Declassify E0}
+  {rE : EventRels E0}
+  (* FIXME: sometimes not needed *)
+  (* {DEind : DeclassifyEvent_ind rE} *).
 
   Definition check_es_valid ii (d:venv) (es1 es2 : pexprs) (d':venv) :=
     d = d' /\ mapM (remove_glob_e ii d) es1 = ok es2.
