@@ -111,8 +111,10 @@ Section WITH_PARAMS.
 
     Context
       {E E0: Type → Type}
-        {wE: with_Error E E0}
-        {rE: EventRels E0}.
+      {wE: with_Error E E0}
+      {wD: with_Declassify E0}
+      {rE: EventRels E0}
+      {DEind : DeclassifyEvent_ind rE}.
 
     Context (insert_renaming_p: fun_info → bool).
     Context (p: prog) (ev: extra_val_t).
@@ -132,14 +134,14 @@ Section WITH_PARAMS.
     #[local] Hint Resolve checker_st_uinclP : core.
 
     Lemma it_insert_renaming_rec (fd: fundef) :
-      wequiv (rE0 := relEvent_recCall uincl_spec) p p' ev ev (st_uincl tt) (f_body fd) (f_body fd) (st_uincl tt).
-    Proof.
+      wequiv (rE0 := relEvent_recCall uincl_spec rE) p p' ev ev (st_uincl tt) (f_body fd) (f_body fd) (st_uincl tt).
+    Proof using DEind.
       apply: (cmd_rect (Pr := Pi_r) (Pi := Pi) (Pc := Pc)).
       - done.
       - by apply wequiv_nil.
       - by move => i c; apply (wequiv_cons (R := st_uincl tt)).
       - by move => x tg ty e ii; apply wequiv_assgn_rel_uincl with checker_st_uincl tt.
-      - by move=> xs tg o es ii; apply wequiv_opn_rel_uincl with checker_st_uincl tt.
+      - by move=> xs tg o es ii; apply wequiv_opn_rel_uincl with checker_st_uincl tt => //; exact _.
       - by move=> xs sc es ii; apply wequiv_syscall_rel_uincl with checker_st_uincl tt.
       - by move=> a ii; apply wequiv_noassert.
       - by move=> e c1 c2 hc1 hc2 ii; apply wequiv_if_rel_uincl with checker_st_uincl tt tt tt.
@@ -154,7 +156,7 @@ Section WITH_PARAMS.
 
     Theorem it_insert_renaming_callP fn :
       wiequiv_f p p' ev ev pre_incl fn fn post_incl.
-    Proof.
+    Proof using DEind.
       apply wequiv_fun_ind' => {} fn _ fs ft [] <- hfsu fd hget.
       exists (insert_renaming_fd insert_renaming_p fd).
       - by rewrite get_map_prog hget.

@@ -29,8 +29,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE : EventRels E0}
-  (* FIXME: sometimes not needed *)
-  (* {DEind : DeclassifyEvent_ind rE} *).
+  {DEind : DeclassifyEvent_ind rE}.
 
 Context (is_reg_array: var -> bool) (p : prog) (ev: extra_val_t).
 Notation gd := (p_globs p).
@@ -53,7 +52,7 @@ Proof. by apply checker_st_uinclP. Qed.
 #[local] Hint Resolve checker_st_uinclP : core.
 
 Lemma it_remove_init_fdP fn : wiequiv_f p p' ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
-Proof.
+Proof using DEind.
  apply wequiv_fun_ind => {}fn _ fs ft [<- hfsu] fd hget.
  exists (remove_init_fd is_reg_array fd).
  + by rewrite get_map_prog hget.
@@ -93,7 +92,7 @@ Proof.
     move=> k w; rewrite (WArray.set_sub_get8 ht1) /=; case: ifP => ?.
     + by rewrite WArray.get_empty; case: ifP.
     by apply hu.
-  + by move=> xs tg o es ii; apply wequiv_opn_rel_uincl with checker_st_uincl tt.
+  + by move=> xs tg o es ii; apply wequiv_opn_rel_uincl with checker_st_uincl tt => //; exact _.
   + by move=> xs sc es ii; apply wequiv_syscall_rel_uincl with checker_st_uincl tt.
   + by move=> a ii; apply wequiv_noassert.
   + by move=> e c1 c2 hc1 hc2 ii; apply wequiv_if_rel_uincl with checker_st_uincl tt tt tt.
@@ -113,17 +112,16 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE : EventRels E0}
-  (* FIXME: sometimes not needed *)
-  (* {DEind : DeclassifyEvent_ind rE} *).
+  {DEind : DeclassifyEvent_ind rE}.
 
 (* TODO : do we really need the instances ? *)
 Lemma it_remove_init_fdPu is_reg_array (p : uprog) ev fn :
   wiequiv_f p (remove_init_prog is_reg_array p) ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
-Proof. apply it_remove_init_fdP. Qed.
+Proof using DEind. apply it_remove_init_fdP. Qed.
 
 Lemma it_remove_init_fdPs is_reg_array (p : sprog) ev fn :
   wiequiv_f p (remove_init_prog is_reg_array p) ev ev (rpreF (eS:= uincl_spec)) fn fn (rpostF (eS:=uincl_spec)).
-Proof. apply it_remove_init_fdP. Qed.
+Proof using DEind. apply it_remove_init_fdP. Qed.
 
 End IT.
 
@@ -137,8 +135,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE : EventRels E0}
-  (* FIXME: sometimes not needed *)
-  (* {DEind : DeclassifyEvent_ind rE} *).
+  {DEind : DeclassifyEvent_ind rE}.
 
 Context (p : uprog) (ev:unit).
 
@@ -175,7 +172,7 @@ Lemma add_init_auxP ii c c' I I' X :
  disjoint I X ->
  wequiv_rec p p' ev ev eq_spec (cmpl_inv I) c c' (cmpl_inv I') ->
  wequiv_rec p p' ev ev eq_spec (cmpl_inv I) c (Sv.fold (add_init_aux ii) X c') (cmpl_inv I').
-Proof.
+Proof using DEind.
   move=> hdisj hs; rewrite Sv.fold_spec.
   have h : forall x, x \in Sv.elements X -> ~Sv.In x I.
   + by move: hdisj; rewrite /disjoint => /Sv.is_empty_spec hdisj x /Sv_elemsP; SvD.fsetdec.
@@ -202,7 +199,7 @@ Lemma it_aux I ii1 ii i :
   wequiv_rec p p' ev ev eq_spec (cmpl_inv I)
      [:: MkI ii i]
      (add_init ii1 I (Sv.union (write_i i) (read_i i)) (MkI ii i)) (cmpl_inv (Sv.union I (write_i i))).
-Proof.
+Proof using DEind.
   apply add_init_auxP; first by apply/Sv.is_empty_spec; SvD.fsetdec.
   apply wkequivP' => s t.
   have h := [elaborate wequiv_rec_st_eq (p:=p) (p':=p') ev ev erefl [:: MkI ii i]].
@@ -216,7 +213,7 @@ Proof.
 Qed.
 
 Lemma it_add_init_callP fn : wiequiv_f p p' ev ev (rpreF (eS:= eq_spec)) fn fn (rpostF (eS:=eq_spec)).
-Proof.
+Proof using DEind.
  apply wequiv_fun_ind => {}fn _ fs _ [<- <-] fd hget.
  exists (add_init_fd fd).
  + by rewrite get_map_prog hget.

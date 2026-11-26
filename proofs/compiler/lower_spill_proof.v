@@ -439,8 +439,7 @@ Context
   {wE : with_Error E E0}
   {wD : with_Declassify E0}
   {rE : EventRels E0}
-  {DEind : DeclassifyEvent_ind rE0}
-.
+  {DEind : DeclassifyEvent_ind rE}.
 
 Definition st_ve S env := st_rel (valid_env S) env.
 
